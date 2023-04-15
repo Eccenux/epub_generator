@@ -36,12 +36,13 @@ class EpubGenerator
 	/** Temp file name. */
 	private function getCacheFile(string $file)
 	{
-		return $this->basePath.$file.'.__EpubGenerator__';
+		return $this->basePath.$file.'.__EpubGenerator__.raw.html';
 	}
 	/** Work file name. */
 	private function getDestFile(string $file)
 	{
-		return $this->basePath.$file.'.__EpubGenerator__.html';
+		// return $this->basePath.$file.'.__EpubGenerator__.html';
+		return $this->basePath.$file;
 	}
 
 	/**
@@ -64,7 +65,7 @@ class EpubGenerator
 		@$source->loadHTML("<!DOCTYPE html>"
 			."\n<html><head><meta charset='UTF-8'></head>"
 			."\n<body>"
-			."\n$sourceHtml"
+			."\n<section>$sourceHtml</section>"
 			."\n</body>"
 			."\n</html>"
 		);
@@ -86,10 +87,23 @@ class EpubGenerator
 
 		// - Save (but at least for now do not replace previous file).
 		$destPath = $this->getDestFile($file);
-		$html = $dest->saveHTML();
+		$html = $this->toXhtml($dest);
 		// $html = $source->saveHTML();
 		return file_put_contents($destPath, $html);
 	}
+
+	/** Final cleanup to html. */
+	private function toXhtml(DOMDocument $dest)
+	{
+		$html = $dest->saveHTML();
+		// proper order, not what DOMDocument does :-/
+		// <!DOCTYPE html>
+		// <[?]xml version="1.0" encoding="UTF-8" standalone="yes"[?]>
+		$html = preg_replace('#<[?]xml[^?]+[?]>#', '', $html);
+		$html = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n" . $html;
+		return $html;
+	}
+
 
 	/** Remove non-export tags (`.ws-noexport`). */
 	private function cleanup(DOMDocument $dom)
@@ -109,13 +123,18 @@ class EpubGenerator
 	/** Remove non-export tags (`.ws-noexport`). */
 	private function replaceBody(DOMDocument $sourceDom, DOMDocument $targetDom)
 	{
-		// Get the <body> element from the source DOM document
-		$body = $sourceDom->getElementsByTagName('body')->item(0);
-
-		// Import the <body> element into the target DOM document
-		$importedBody = $targetDom->importNode($body, true);
-
-		// Replace the <body> element in the target DOM document with the imported <body> element
-		$targetDom->getElementsByTagName('html')->item(0)->replaceChild($importedBody, $targetDom->getElementsByTagName('body')->item(0));
+		// get container we added when creating sourceDom
+		$container = $sourceDom->getElementsByTagName('section')->item(0);
+		// import container to target
+		$importedContainer = $targetDom->importNode($container, true);
+		
+		// $targetBody->replaceChild($importedBody, $targetBody->firstChild);
+		// remove content from target body
+		$targetBody = $targetDom->getElementsByTagName('body')->item(0);
+		foreach ($targetBody->childNodes as $node) {
+			$targetBody->removeChild($node);
+		}
+		// append
+		$targetBody->appendChild($importedContainer);
 	}
 }
