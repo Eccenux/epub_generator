@@ -13,5 +13,7 @@ Epub.css and indexes should already be there so only re-building HTML would be r
 
 - Add Epub3 pages in xhtml.
 - Add Epub3 nav (page-list)?
+- Zip to epub.
+- Parameters / cmd options.
 
 http://kb.daisy.org/publishing/docs/navigation/pagelist.html#ex 
