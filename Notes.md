@@ -11,15 +11,18 @@ Epub.css and indexes should already be there so only re-building HTML would be r
 
 ## Next steps
 
-- Add Epub3 pages in xhtml.
+- ✅Add Epub3 pages in xhtml.
 - Add Epub3 nav (page-list)?
-- Make page ids universal.
+- Make page ids universal (might have multiple djvu per html).
+- Generate ToC from headers?
+- Split by headers?
 - Zip to epub.
 - Parameters / cmd options.
 - Make similar output as wsexport? Seems like it replaces `<div class="mw-parser-output">` with `<body...><section data-mw-section-id="0">`.
 - Do not replace national characters with entities (but can replace e.g. thinspace).
 - Do I need to filter duplicate CSS from templates? Maybe remove redundant link-css markers.
 
+Epub3 pages:
 http://kb.daisy.org/publishing/docs/navigation/pagelist.html#ex 
 
 ## Parse API vs render

@@ -70,11 +70,15 @@ class EpubGenerator
 			."\n</html>"
 		);
 
+		// - Add Epub3 pages in xhtml.
+		// - Add Epub3 nav (page-list)?
+		// - Generate ToC from headers?
+		$this->pages($source);
+		
 		// - Remove non-export tags (`.ws-noexport`).
 		$this->cleanup($source);
 
 		// - Tidy if needed (close p tags etc).
-
 		// - Add/copy meta (head, foot).
 		// (maybe get .mw-body-content and replace innerHTML)
 		// echo $source->saveHTML();
@@ -116,6 +120,34 @@ class EpubGenerator
 
 		// Remove elements
 		foreach ($elements as $element) {
+			$element->parentNode->removeChild($element);
+		}
+	}
+
+	/** Add epub page markers. */
+	private function pages(DOMDocument $dom)
+	{
+		// Create DOMXPath
+		$xpath = new DOMXPath($dom);
+
+		// Get elements with "ws-noexport"
+		$elements = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' ws-pagenum ')]");
+	
+		// Replace elements
+		$p = 0;
+		foreach ($elements as $element) {
+			$p++;
+			$pageText = $element->getElementsByTagName('a')->item(0)->textContent;
+			// <span
+			// role="doc-pagebreak"
+			// id="pg24"
+			// aria-label="24"/>
+			$page = $dom->createElement('span');
+			$page->setAttribute('role', 'doc-pagebreak');
+			$page->setAttribute('id', 'epub_p_'.$p);
+			$page->setAttribute('aria-label', $pageText);
+			// $element->parentNode->replaceChild($element, $page);
+			$element->parentNode->insertBefore($page, $element);
 			$element->parentNode->removeChild($element);
 		}
 	}
