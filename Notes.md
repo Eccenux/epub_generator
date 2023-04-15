@@ -20,3 +20,8 @@ Epub.css and indexes should already be there so only re-building HTML would be r
 - Do not replace national characters with entities (but can replace e.g. thinspace).
 
 http://kb.daisy.org/publishing/docs/navigation/pagelist.html#ex 
+
+## Parse API vs render
+
+Parse API has more options but ultimately seems to return the same code.
+There are some differences in HTML comments, but other then that the HTML is the same.

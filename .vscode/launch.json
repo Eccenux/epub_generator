@@ -12,6 +12,15 @@
 			"program": "${workspaceFolder}/run.php",
 			"cwd": "${workspaceFolder}/",
 			"port": 9000
-		}
+		},
+		{
+			"name": "Launch current php",
+			"type": "php",
+			"request": "launch",
+			"runtimeExecutable": "c:\\Programy\\Serwerowate\\PHP74\\php",
+			"program": "${file}",
+			"cwd": "${fileDirname}",
+			"port": 9000
+		},
 	]
 }
