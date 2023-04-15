@@ -6,6 +6,7 @@
  */
 // lib
 require_once './EpubGenerator.php';
+require_once './Logger.php';
 
 // setup
 $basePath = '../Sylwandira_calosc_test/OPS/';
@@ -14,9 +15,13 @@ $url = 'https://pl.wikisource.org/wiki/Sylwandira/ca%C5%82o%C5%9B%C4%87?action=r
 
 // init
 $gen = new EpubGenerator($basePath);
-
-// download first and save as cache?
-// could later check last change and update raw html only when needed
+$console = new Logger();
 
 // update
+$console->log("Updating...");
 $gen->update($url, $mainHtml);
+$console->log("Update done");
+
+// test
+// $html = file_get_contents($basePath.$mainHtml);
+// echo $html;

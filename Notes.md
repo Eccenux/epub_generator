@@ -15,5 +15,6 @@ Epub.css and indexes should already be there so only re-building HTML would be r
 - Add Epub3 nav (page-list)?
 - Zip to epub.
 - Parameters / cmd options.
+- Make similar output as wsexport? Seems like it replaces `<div class="mw-parser-output">` with `<body...><section data-mw-section-id="0">`.
 
 http://kb.daisy.org/publishing/docs/navigation/pagelist.html#ex 
