@@ -70,16 +70,52 @@ class EpubGenerator
 		);
 
 		// - Remove non-export tags (`.ws-noexport`).
+		$this->cleanup($source);
 
 		// - Tidy if needed (close p tags etc).
 
 		// - Add/copy meta (head, foot).
 		// (maybe get .mw-body-content and replace innerHTML)
 		// echo $source->saveHTML();
+		// $destHtml = file_get_contents($this->basePath.$file);
+		$dest = new DOMDocument();
+		@$dest->loadHTMLFile($this->basePath.$file);
+		// $body = $dest->getElementsByTagName('body')[0];
+		// $body->innerHTML = $source->getElementsByTagName('body')[0]->innerHTML;
+		$this->replaceBody($source, $dest);
 
 		// - Save (but at least for now do not replace previous file).
 		$destPath = $this->getDestFile($file);
-		$html = $source->saveHTML();
+		$html = $dest->saveHTML();
+		// $html = $source->saveHTML();
 		return file_put_contents($destPath, $html);
+	}
+
+	/** Remove non-export tags (`.ws-noexport`). */
+	private function cleanup(DOMDocument $dom)
+	{
+		// Create DOMXPath
+		$xpath = new DOMXPath($dom);
+
+		// Get elements with "ws-noexport"
+		$elements = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' ws-noexport ')]");
+
+		// Remove elements
+		foreach ($elements as $element) {
+			$element->parentNode->removeChild($element);
+		}
+	}
+
+	/** Remove non-export tags (`.ws-noexport`). */
+	private function replaceBody(DOMDocument $sourceDom, DOMDocument $targetDom)
+	{
+		// Get the <body> element from the source DOM document
+		$body = $sourceDom->getElementsByTagName('body')->item(0);
+
+		// Import the <body> element into the target DOM document
+		$importedBody = $targetDom->importNode($body, true);
+
+		// Replace the <body> element in the target DOM document with the imported <body> element
+		$targetDom->getElementsByTagName('html')->item(0)->replaceChild($importedBody, $targetDom->getElementsByTagName('body')->item(0));
 	}
 }
