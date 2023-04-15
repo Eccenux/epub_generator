@@ -163,20 +163,23 @@ class EpubGenerator
 	{
 		// might want to refactor this out later... maybe.
 		// this could loop over all landmarks and be a separate step from update...
+
+		// - Get nav file
 		$destPath = $this->getNavFile();
 		$dest = new DOMDocument();
 		@$dest->loadHTMLFile($destPath);
 
-		// setup
+		// - Setup
 		$id = 'page-list';
 		// $epubNs = 'http://www.idpf.org/2007/ops';
 
-		// remove
+		// - Remove prev list
 		$prev = $dest->getElementById($id);
 		if ($prev instanceof DOMNode) {
 			$prev->parentNode->removeChild($prev);
 		}
 
+		// - Create list container
 		// <nav epub:type="page-list" hidden="hidden">
 		// <ol></ol>
 		// </nav>
@@ -187,16 +190,22 @@ class EpubGenerator
 		$ol = $dest->createElement('ol');
 		$nav->appendChild($ol);
 
+		// - Get page breaks and generate list
 		$xpath = new DOMXPath($dom);
 		$elements = $xpath->query("//*[contains(@role, 'doc-pagebreak')]");
 		// 	<li><a href="georgia.xhtml#page752">752</a></li>
 		// 	<li><a href="georgia.xhtml#page753">753</a></li>
 		foreach ($elements as $element) {
-			// $page->setAttribute('id', 'epub_p_'.$p);
-			// $page->setAttribute('aria-label', $pageText);
+			// new line
+			$ol->appendChild(new DOMText("\n\t"));
+
+			// li
 			$li = $dest->createElement('li');
 			$ol->appendChild($li);
-			// 	<li><a href="georgia.xhtml#page752">752</a></li>
+
+			// <a href="georgia.xhtml#page752">752</a>
+			// $page->setAttribute('id', 'epub_p_'.$p);
+			// $page->setAttribute('aria-label', $pageText);
 			$a = $dest->createElement('a');
 			$pid = $element->getAttribute('id');
 			$label = $element->getAttribute('aria-label');
@@ -205,9 +214,17 @@ class EpubGenerator
 			$li->appendChild($a);
 		}
 
-		// add
-		$dest->getElementsByTagName('nav')->item(0)->parentNode->appendChild($nav);
+		// - Add list
+		$navContainer = $dest->getElementsByTagName('nav')->item(0)->parentNode;
+		// remove white space
+		while ($navContainer->lastChild instanceof DOMText) {
+			$navContainer->removeChild($navContainer->lastChild);
+		}
+		$navContainer->appendChild(new DOMText("\n"));
+		$navContainer->appendChild($nav);
+		$navContainer->appendChild(new DOMText("\n"));
 
+		// - Save changes
 		$html = $this->toXhtml($dest);
 		// $html = $source->saveHTML();
 		return file_put_contents($destPath, $html);
