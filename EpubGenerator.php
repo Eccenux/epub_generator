@@ -95,11 +95,11 @@ class EpubGenerator
 	/** Final cleanup to html. */
 	private function toXhtml(DOMDocument $dest)
 	{
-		$html = $dest->saveHTML();
+		$html = $dest->saveXML();
 		// proper order, not what DOMDocument does :-/
 		// <!DOCTYPE html>
 		// <[?]xml version="1.0" encoding="UTF-8" standalone="yes"[?]>
-		$html = preg_replace('#<[?]xml[^?]+[?]>#', '', $html);
+		$html = preg_replace('#<[?]xml[^>]+[?]>#', '', $html);
 		$html = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n" . $html;
 		return $html;
 	}
