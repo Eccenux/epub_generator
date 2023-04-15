@@ -44,6 +44,11 @@ class EpubGenerator
 		// return $this->basePath.$file.'.__EpubGenerator__.html';
 		return $this->basePath.$file;
 	}
+	/** Navigation file name. */
+	private function getNavFile()
+	{
+		return $this->basePath.'nav.xhtml';
+	}
 
 	/**
 	 * Update HTML.
@@ -74,6 +79,7 @@ class EpubGenerator
 		// - Add Epub3 nav (page-list)?
 		// - Generate ToC from headers?
 		$this->pages($source);
+		$this->navPages($source, $file);
 		
 		// - Remove non-export tags (`.ws-noexport`).
 		$this->cleanup($source);
@@ -150,6 +156,61 @@ class EpubGenerator
 			$element->parentNode->insertBefore($page, $element);
 			$element->parentNode->removeChild($element);
 		}
+	}
+
+	/** Add Epub3 nav (page-list). */
+	private function navPages(DOMDocument $dom, $file)
+	{
+		// might want to refactor this out later... maybe.
+		// this could loop over all landmarks and be a separate step from update...
+		$destPath = $this->getNavFile();
+		$dest = new DOMDocument();
+		@$dest->loadHTMLFile($destPath);
+
+		// setup
+		$id = 'page-list';
+		// $epubNs = 'http://www.idpf.org/2007/ops';
+
+		// remove
+		$prev = $dest->getElementById($id);
+		if ($prev instanceof DOMNode) {
+			$prev->parentNode->removeChild($prev);
+		}
+
+		// <nav epub:type="page-list" hidden="hidden">
+		// <ol></ol>
+		// </nav>
+		$nav = $dest->createElement('nav');
+		$nav->setAttribute('hidden', 'hidden');
+		$nav->setAttribute('id', $id);
+		$nav->setAttribute('epub:type', 'page-list');
+		$ol = $dest->createElement('ol');
+		$nav->appendChild($ol);
+
+		$xpath = new DOMXPath($dom);
+		$elements = $xpath->query("//*[contains(@role, 'doc-pagebreak')]");
+		// 	<li><a href="georgia.xhtml#page752">752</a></li>
+		// 	<li><a href="georgia.xhtml#page753">753</a></li>
+		foreach ($elements as $element) {
+			// $page->setAttribute('id', 'epub_p_'.$p);
+			// $page->setAttribute('aria-label', $pageText);
+			$li = $dest->createElement('li');
+			$ol->appendChild($li);
+			// 	<li><a href="georgia.xhtml#page752">752</a></li>
+			$a = $dest->createElement('a');
+			$pid = $element->getAttribute('id');
+			$label = $element->getAttribute('aria-label');
+			$a->setAttribute('href', "$file#$pid");
+			$a->textContent = $label;
+			$li->appendChild($a);
+		}
+
+		// add
+		$dest->getElementsByTagName('nav')->item(0)->parentNode->appendChild($nav);
+
+		$html = $this->toXhtml($dest);
+		// $html = $source->saveHTML();
+		return file_put_contents($destPath, $html);
 	}
 
 	/** Remove non-export tags (`.ws-noexport`). */
