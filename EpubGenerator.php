@@ -121,10 +121,14 @@ class EpubGenerator
 		// Create DOMXPath
 		$xpath = new DOMXPath($dom);
 
-		// Get elements with "ws-noexport"
+		// Remove elements with "ws-noexport"
 		$elements = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' ws-noexport ')]");
+		foreach ($elements as $element) {
+			$element->parentNode->removeChild($element);
+		}
 
-		// Remove elements
+		// Remove elements with rel="mw-deduplicated-inline-style"
+		$elements = $xpath->query("//link[@rel='mw-deduplicated-inline-style']");
 		foreach ($elements as $element) {
 			$element->parentNode->removeChild($element);
 		}
