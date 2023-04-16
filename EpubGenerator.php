@@ -195,6 +195,9 @@ class EpubGenerator
 		$elements = $xpath->query("//*[contains(@role, 'doc-pagebreak')]");
 		// 	<li><a href="georgia.xhtml#page752">752</a></li>
 		// 	<li><a href="georgia.xhtml#page753">753</a></li>
+		$maxNum = 0;
+		// $prevNum = 0;
+		$volume = 0;
 		foreach ($elements as $element) {
 			// new line
 			$ol->appendChild(new DOMText("\n\t"));
@@ -209,6 +212,13 @@ class EpubGenerator
 			$a = $dest->createElement('a');
 			$pid = $element->getAttribute('id');
 			$label = $element->getAttribute('aria-label');
+
+			// prepend volume number when needed
+			$this->nextVol($label, $maxNum, $volume);
+			if ($volume > 0) {
+				$label = $this->intToRoman($volume) . ". " . $label;
+			}
+
 			$a->setAttribute('href', "$file#$pid");
 			$a->textContent = $label;
 			$li->appendChild($a);
@@ -228,6 +238,59 @@ class EpubGenerator
 		$html = $this->toXhtml($dest);
 		// $html = $source->saveHTML();
 		return file_put_contents($destPath, $html);
+	}
+
+	/** Roman numeric. */
+	private function intToRoman(int $num) {
+		$map = array('M' => 1000, 'CM' => 900, 'D' => 500, 'CD' => 400, 'C' => 100, 'XC' => 90, 'L' => 50, 'XL' => 40, 'X' => 10, 'IX' => 9, 'V' => 5, 'IV' => 4, 'I' => 1);
+		$returnValue = '';
+		while ($num > 0) {
+			foreach ($map as $roman => $int) {
+				if($num >= $int) {
+					$num -= $int;
+					$returnValue .= $roman;
+					break;
+				}
+			}
+		}
+		return $returnValue;
+	}
+
+	/**
+	 * Figure out if there is a next volume.
+	 * 
+	 * Assume that page labels will go up and then to either:
+	 * title page (named page)
+	 * or something less then 10.
+	 * 
+	 * This could be optional...
+	 * It would probably be confusing in Cortazar, more then in original :]
+	 */
+	private function nextVol($label, &$maxNum, &$volume) {
+		// figure out if there is a next volume
+		$nextVol = false;
+		if (is_numeric($label)) {
+			$num = intval($label);
+			if ($num > 0) {
+				if ($num > $maxNum) {
+					$maxNum = $num;
+				} else {
+					$nextVol = true;
+				}
+			}
+		} else if ($maxNum > 10) {
+			$nextVol = true;
+		}
+
+		// inc vol
+		if ($nextVol) {
+			$maxNum = 0;
+			if ($volume == 0) {
+				$volume++;
+			}
+			$volume++;
+		}
+		return $nextVol;
 	}
 
 	/** Remove non-export tags (`.ws-noexport`). */
